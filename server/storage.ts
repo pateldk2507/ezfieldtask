@@ -9,6 +9,7 @@ import {
   emergencyContacts,
   notifications,
   vaultAccessCodes,
+  emailTemplates,
   type InsertOrganization,
   type InsertUser,
   type InsertTask,
@@ -16,6 +17,7 @@ import {
   type InsertTaskDocument,
   type InsertEmergencyContact,
   type InsertNotification,
+  type InsertEmailTemplate,
   type Organization,
   type User,
   type Task,
@@ -23,6 +25,7 @@ import {
   type TaskDocument,
   type EmergencyContact,
   type Notification,
+  type EmailTemplate,
 } from "@shared/schema";
 
 export class DatabaseStorage {
@@ -307,6 +310,44 @@ export class DatabaseStorage {
         )
       );
     return !!entry;
+  }
+
+  // Email Templates
+  async createEmailTemplate(data: InsertEmailTemplate): Promise<EmailTemplate> {
+    const [template] = await db.insert(emailTemplates).values(data).returning();
+    return template;
+  }
+
+  async getEmailTemplates(organizationId: string): Promise<EmailTemplate[]> {
+    return db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.organizationId, organizationId))
+      .orderBy(desc(emailTemplates.createdAt));
+  }
+
+  async getEmailTemplate(id: string): Promise<EmailTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(emailTemplates)
+      .where(eq(emailTemplates.id, id));
+    return template;
+  }
+
+  async updateEmailTemplate(
+    id: string,
+    data: Partial<InsertEmailTemplate>
+  ): Promise<EmailTemplate | undefined> {
+    const [template] = await db
+      .update(emailTemplates)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(emailTemplates.id, id))
+      .returning();
+    return template;
+  }
+
+  async deleteEmailTemplate(id: string): Promise<void> {
+    await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
   }
 
   // Seed default statuses for new org

@@ -201,6 +201,28 @@ export const notifications = pgTable(
   ]
 );
 
+export const emailTemplates = pgTable(
+  "email_templates",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    organizationId: varchar("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdById: varchar("created_by_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [index("email_templates_org_idx").on(table.organizationId)]
+);
+
 export const vaultAccessCodes = pgTable(
   "vault_access_codes",
   {
@@ -221,12 +243,24 @@ export const vaultAccessCodes = pgTable(
 );
 
 // Relations
+export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [emailTemplates.organizationId],
+    references: [organizations.id],
+  }),
+  createdBy: one(users, {
+    fields: [emailTemplates.createdById],
+    references: [users.id],
+  }),
+}));
+
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   users: many(users),
   tasks: many(tasks),
   taskStatuses: many(taskStatuses),
   notifications: many(notifications),
   vaultAccessCodes: many(vaultAccessCodes),
+  emailTemplates: many(emailTemplates),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -352,6 +386,12 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -383,3 +423,5 @@ export type InsertEmergencyContact = z.infer<
 >;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;

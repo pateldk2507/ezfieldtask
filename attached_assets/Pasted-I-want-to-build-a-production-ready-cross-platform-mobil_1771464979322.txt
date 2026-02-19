@@ -1,0 +1,343 @@
+I want to build a production-ready cross-platform mobile app (Android + iOS) using:
+
+Frontend: React Native with Expo
+
+Backend: Node.js + Express
+
+Database: PostgreSQL (or Supabase)
+
+Authentication: JWT-based authentication with role-based access control
+
+Storage: Cloud storage for images and documents
+
+Encryption: Secure vault encryption for sensitive fields
+
+App Name: EZ Field Task
+Domain: ezfieldtask.ca
+
+This app is designed for MSPs and technician-based service companies to manage field tasks, scheduling, documentation, and reporting.
+
+🧑‍💼 User Roles
+
+Create 4 user roles with strict role-based permissions:
+
+Admin
+
+Scheduler
+
+Sales
+
+Technician
+
+Use RBAC middleware on backend.
+
+🔐 Permissions Matrix
+Admin
+
+Full read/write/delete access
+
+Create users and assign roles
+
+Assign license to users
+
+Reset passwords
+
+Configure SMTP settings
+
+Configure branding (color palette + logo upload)
+
+Create/edit/delete custom task status with color
+
+Create/edit/delete category fields
+
+Manage access codes for vault
+
+Scheduler
+
+Create/update/delete tasks
+
+View all tasks
+
+Assign technician
+
+View technician schedule (weekly/monthly)
+
+Move tasks between:
+
+Pending to Schedule
+
+Ongoing
+
+Problem
+
+Completed
+
+Sales
+
+Create/update/delete tasks they created
+
+View tasks assigned to them
+
+Dashboard analytics of their tasks
+
+View reports
+
+Technician
+
+View assigned tasks only
+
+Update task status
+
+Add documentation
+
+Move task to Pending (must enter reason)
+
+Mark task Completed
+
+📌 Task Model
+
+Create a Task schema with:
+
+Required fields:
+
+Title
+
+Description
+
+Scheduled Date
+
+Scheduled Time
+
+Address
+
+Contact Person Name
+
+Contact Email
+
+Contact Phone
+
+Sales Person (dropdown)
+
+Assigned Technician
+
+Urgency Level (Low, Medium, High, Critical)
+
+Optional:
+
+Additional Details (text area, not required)
+
+Status:
+Default statuses:
+
+New
+
+In Progress
+
+Pending
+
+Completed
+
+Admin can:
+
+Create custom status
+
+Assign color to each status
+
+🔐 Secure Vault Feature
+
+Field:
+Access Code Required? (Yes/No)
+
+If Yes:
+
+Show encrypted vault input field
+
+Data must be AES encrypted
+
+Only visible after user enters a 6-digit access code assigned by Admin/Scheduler
+
+Vault content hidden by default
+
+📸 Documentation
+
+Each task should allow:
+
+Photo upload
+
+Map location attachment
+
+Notes
+
+File attachments
+
+Use cloud storage.
+
+📱 Mobile UI Structure
+
+Use bottom tab navigation.
+
+👷 Technician App UI
+Tab 1: My Day (Dashboard)
+
+Show:
+
+Total Assigned Tasks (today)
+
+Total Scheduled Hours (today)
+
+Below show 3 Tabs:
+
+New
+
+Pending
+
+Completed
+
+Task cards show:
+
+Urgency badge color
+
+Title
+
+Address
+
+Scheduled time
+
+When clicking task:
+Show full task details screen.
+
+If moving to Pending:
+Prompt: “Enter reason for pending”
+
+Tab 2: Calendar View
+
+Top horizontal date selector (Week view: 6,7,8,9,10)
+When tapping date:
+Show tasks for selected date below.
+
+Tab 3: Settings
+
+Enable/Disable Notifications
+
+Change Profile Photo
+
+Add Emergency Contact
+
+💼 Sales App UI
+Tab 1: Dashboard
+
+Show:
+
+Total Created Tasks
+
+Status breakdown chart
+
+Tasks assigned to them
+
+Tab 2: My Tasks
+
+List of created tasks
+
+Floating + button bottom right to create task
+
+Tab 3: Reports
+
+Filter by date
+
+Status-based reporting
+
+Tab 4: Settings
+
+Emergency contact
+
+Notification preferences
+
+📅 Scheduler App UI
+Tab 1: Task Board
+
+4 Tabs:
+
+Pending to Schedule
+
+Current Ongoing
+
+Problem
+
+Completed
+
+Floating button to create task
+
+Tab 2: Technician Schedule
+
+Weekly / Monthly view
+
+Filter by technician
+
+Tab 3: Calendar
+
+Show all assigned tasks
+
+Tab 4: Settings
+🛠 Admin Panel
+
+Admin should have web-based dashboard.
+
+Features:
+
+User management
+
+Role assignment
+
+License management
+
+Password reset
+
+SMTP config
+
+Branding config (upload logo, choose color palette)
+
+Task status customization
+
+Field customization
+
+🗂 Database Design
+
+Create proper relational schema:
+
+Users
+Tasks
+TaskStatus
+Roles
+Permissions
+VaultData
+TaskDocuments
+Notifications
+EmergencyContacts
+
+Use foreign keys and indexing.
+
+🔔 Notifications
+
+Push notifications when:
+
+Task assigned
+
+Task updated
+
+Task moved to pending
+
+Use Expo push notifications
+
+🎨 UI/UX Requirements
+
+Clean modern UI
+
+Card-based layout
+
+Color-coded urgency
+
+Responsive for phone + tablet
+
+Dark/light mode support
+
+Use consistent branding

@@ -218,6 +218,7 @@ export default function EmailTemplatesScreen() {
           Templates
         </Text>
         <Pressable
+          testID="create-template-btn"
           onPress={openCreate}
           style={[styles.addBtn, { backgroundColor: theme.tint }]}
         >

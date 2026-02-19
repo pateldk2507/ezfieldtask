@@ -26,7 +26,7 @@ export default function IndexScreen() {
         router.replace("/(sales)");
         break;
       case "admin":
-        router.replace("/(scheduler)");
+        router.replace("/(admin)");
         break;
       default:
         router.replace("/(auth)/login");

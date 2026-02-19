@@ -512,6 +512,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // ──── Email Config (Organization SMTP) ────
+  app.get(
+    "/api/email-config",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const org = await storage.getOrganization(req.user!.organizationId);
+        if (!org) return res.status(404).json({ message: "Organization not found" });
+        res.json({
+          smtpHost: org.smtpHost || "",
+          smtpPort: org.smtpPort || 587,
+          smtpUser: org.smtpUser || "",
+          smtpPass: org.smtpPass ? "********" : "",
+          hasPassword: !!org.smtpPass,
+        });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch email config" });
+      }
+    }
+  );
+
+  app.put(
+    "/api/email-config",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const { smtpHost, smtpPort, smtpUser, smtpPass } = req.body;
+        const updateData: any = {};
+        if (smtpHost !== undefined) updateData.smtpHost = smtpHost;
+        if (smtpPort !== undefined) updateData.smtpPort = parseInt(smtpPort) || 587;
+        if (smtpUser !== undefined) updateData.smtpUser = smtpUser;
+        if (smtpPass !== undefined && smtpPass !== "********") updateData.smtpPass = smtpPass;
+
+        const org = await storage.updateOrganization(req.user!.organizationId, updateData);
+        res.json({
+          smtpHost: org?.smtpHost || "",
+          smtpPort: org?.smtpPort || 587,
+          smtpUser: org?.smtpUser || "",
+          smtpPass: org?.smtpPass ? "********" : "",
+          hasPassword: !!org?.smtpPass,
+        });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to update email config" });
+      }
+    }
+  );
+
+  app.post(
+    "/api/email-config/test",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const org = await storage.getOrganization(req.user!.organizationId);
+        if (!org?.smtpHost || !org?.smtpUser) {
+          return res.status(400).json({ message: "SMTP not configured. Please save email settings first." });
+        }
+        res.json({ message: "Email configuration looks valid. Test email would be sent to: " + org.smtpUser });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to test email config" });
+      }
+    }
+  );
+
+  // ──── Email Templates ────
+  app.get(
+    "/api/email-templates",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const templates = await storage.getEmailTemplates(req.user!.organizationId);
+        res.json(templates);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch email templates" });
+      }
+    }
+  );
+
+  app.get(
+    "/api/email-templates/:id",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const template = await storage.getEmailTemplate(req.params.id);
+        if (!template || template.organizationId !== req.user!.organizationId) {
+          return res.status(404).json({ message: "Template not found" });
+        }
+        res.json(template);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch template" });
+      }
+    }
+  );
+
+  app.post(
+    "/api/email-templates",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const { name, subject, body } = req.body;
+        if (!name || !subject || !body) {
+          return res.status(400).json({ message: "Name, subject, and body are required" });
+        }
+        const template = await storage.createEmailTemplate({
+          name,
+          subject,
+          body,
+          organizationId: req.user!.organizationId,
+          createdById: req.user!.id,
+          isActive: true,
+        });
+        res.json(template);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to create template" });
+      }
+    }
+  );
+
+  app.put(
+    "/api/email-templates/:id",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const existing = await storage.getEmailTemplate(req.params.id);
+        if (!existing || existing.organizationId !== req.user!.organizationId) {
+          return res.status(404).json({ message: "Template not found" });
+        }
+        const template = await storage.updateEmailTemplate(req.params.id, req.body);
+        res.json(template);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to update template" });
+      }
+    }
+  );
+
+  app.delete(
+    "/api/email-templates/:id",
+    authMiddleware,
+    requireRole("admin"),
+    async (req: AuthRequest, res: Response) => {
+      try {
+        const existing = await storage.getEmailTemplate(req.params.id);
+        if (!existing || existing.organizationId !== req.user!.organizationId) {
+          return res.status(404).json({ message: "Template not found" });
+        }
+        await storage.deleteEmailTemplate(req.params.id);
+        res.json({ message: "Template deleted" });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to delete template" });
+      }
+    }
+  );
+
   // ──── Dashboard Stats ────
   app.get("/api/dashboard/stats", authMiddleware, async (req: AuthRequest, res: Response) => {
     try {

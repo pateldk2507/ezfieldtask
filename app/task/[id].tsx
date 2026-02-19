@@ -17,6 +17,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPut } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
 
 const URGENCY_CONFIG: Record<string, { color: string; label: string }> = {
@@ -35,6 +36,7 @@ export default function TaskDetailScreen() {
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
 
+  const { toast, showToast, hideToast } = useToast();
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [pendingReason, setPendingReason] = useState("");
 
@@ -58,6 +60,10 @@ export default function TaskDetailScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks", id] });
+      showToast("Task updated successfully", "success");
+    },
+    onError: (err: any) => {
+      showToast(err.message || "Failed to update task", "error");
     },
   });
 
@@ -131,6 +137,7 @@ export default function TaskDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Toast {...toast} onDismiss={hideToast} />
       <View
         style={[
           styles.header,

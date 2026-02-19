@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +19,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import Colors from "@/constants/colors";
+import { Toast, useToast } from "@/components/Toast";
 
 export default function SettingsScreen() {
   const { user, organization, logout } = useAuth();
@@ -26,6 +28,7 @@ export default function SettingsScreen() {
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
+  const { toast, showToast, hideToast } = useToast();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.notificationsEnabled ?? true
@@ -47,14 +50,18 @@ export default function SettingsScreen() {
       setShowAddContact(false);
       setContactName("");
       setContactPhone("");
+      showToast("Emergency contact added", "success");
     },
+    onError: (err: any) => showToast(err.message || "Failed to add contact", "error"),
   });
 
   const deleteContactMutation = useMutation({
     mutationFn: (id: string) => apiDelete(`/api/emergency-contacts/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/emergency-contacts"] });
+      showToast("Emergency contact removed", "success");
     },
+    onError: (err: any) => showToast(err.message || "Failed to remove contact", "error"),
   });
 
   const handleLogout = () => {
@@ -104,6 +111,8 @@ export default function SettingsScreen() {
   );
 
   return (
+    <View style={{ flex: 1 }}>
+    <Toast {...toast} onDismiss={hideToast} />
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={{
@@ -197,15 +206,21 @@ export default function SettingsScreen() {
               <Pressable
                 style={[styles.contactActionBtn, { backgroundColor: theme.tint }]}
                 onPress={() => {
-                  if (contactName && contactPhone) {
-                    addContactMutation.mutate({
-                      name: contactName,
-                      phone: contactPhone,
-                    });
+                  if (!contactName || !contactPhone) {
+                    showToast("Please fill in both name and phone", "error");
+                    return;
                   }
+                  addContactMutation.mutate({
+                    name: contactName,
+                    phone: contactPhone,
+                  });
                 }}
               >
-                <Ionicons name="checkmark" size={20} color="#FFF" />
+                {addContactMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Ionicons name="checkmark" size={20} color="#FFF" />
+                )}
               </Pressable>
             </View>
           </View>
@@ -232,6 +247,7 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
     </ScrollView>
+    </View>
   );
 }
 

@@ -25,6 +25,7 @@ function RootLayoutNav() {
         name="(auth)"
         options={{ presentation: "modal", headerShown: false }}
       />
+      <Stack.Screen name="(admin)" options={{ headerShown: false }} />
       <Stack.Screen name="(technician)" options={{ headerShown: false }} />
       <Stack.Screen name="(scheduler)" options={{ headerShown: false }} />
       <Stack.Screen name="(sales)" options={{ headerShown: false }} />

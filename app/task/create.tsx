@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
 
 const URGENCY_LEVELS = [
@@ -47,6 +48,7 @@ export default function CreateTaskScreen() {
   const [selectedTechnician, setSelectedTechnician] = useState("");
   const [selectedSalesPerson, setSelectedSalesPerson] = useState(user?.role === "sales" ? user.id : "");
   const [error, setError] = useState("");
+  const { toast, showToast, hideToast } = useToast();
 
   const { data: technicians = [] } = useQuery({
     queryKey: ["/api/users/role/technician"],
@@ -63,16 +65,19 @@ export default function CreateTaskScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      router.back();
+      showToast("Task created successfully", "success");
+      setTimeout(() => router.back(), 800);
     },
     onError: (err: any) => {
       setError(err.message || "Failed to create task");
+      showToast(err.message || "Failed to create task", "error");
     },
   });
 
   const handleCreate = () => {
     if (!title || !description || !scheduledDate || !scheduledTime || !address || !contactPersonName || !contactEmail || !contactPhone) {
       setError("Please fill in all required fields");
+      showToast("Please fill in all required fields", "error");
       return;
     }
     setError("");
@@ -129,6 +134,7 @@ export default function CreateTaskScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Toast {...toast} onDismiss={hideToast} />
       <View
         style={[
           styles.header,

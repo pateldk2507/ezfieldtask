@@ -15,7 +15,7 @@ import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { TaskCard } from "@/components/TaskCard";
+import TaskCard from "@/components/TaskCard";
 import Colors from "@/constants/colors";
 
 export default function AdminTasksScreen() {
@@ -136,7 +136,11 @@ export default function AdminTasksScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <TaskCard task={item} statusMap={statusMap} />
+            <TaskCard
+              task={item}
+              statusName={statusMap[item.statusId]?.name}
+              statusColor={statusMap[item.statusId]?.color}
+            />
           )}
         />
       )}

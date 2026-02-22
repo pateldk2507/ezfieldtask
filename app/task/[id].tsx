@@ -55,6 +55,11 @@ export default function TaskDetailScreen() {
     queryFn: () => apiGet<any[]>("/api/users"),
   });
 
+  const { data: technicians = [] } = useQuery({
+    queryKey: ["/api/users/role/technician"],
+    queryFn: () => apiGet<any[]>("/api/users/role/technician"),
+  });
+
   const updateMutation = useMutation({
     mutationFn: (data: any) => apiPut(`/api/tasks/${id}`, data),
     onSuccess: () => {
@@ -215,6 +220,57 @@ export default function TaskDetailScreen() {
           {renderInfoRow("person-add-outline", "Created By", userMap[task.createdById] || "Unknown")}
         </View>
 
+        {(user?.role === "admin" || user?.role === "scheduler") && technicians.length > 0 && (
+          <View style={[styles.infoCard, { backgroundColor: theme.surface }]}>
+            <Text style={[styles.cardTitle, { color: theme.text, fontFamily: "Inter_600SemiBold" }]}>
+              Assign Technician
+            </Text>
+            <View style={styles.techGrid}>
+              <Pressable
+                style={[
+                  styles.techOption,
+                  {
+                    backgroundColor: !task.assignedTechnicianId ? theme.tint + "20" : theme.surfaceSecondary,
+                    borderColor: !task.assignedTechnicianId ? theme.tint : "transparent",
+                  },
+                ]}
+                onPress={() => updateMutation.mutate({ assignedTechnicianId: null })}
+              >
+                <Ionicons name="person-remove-outline" size={16} color={!task.assignedTechnicianId ? theme.tint : theme.textSecondary} />
+                <Text style={[styles.techOptionText, { color: !task.assignedTechnicianId ? theme.tint : theme.text, fontFamily: !task.assignedTechnicianId ? "Inter_600SemiBold" : "Inter_500Medium" }]}>
+                  Unassigned
+                </Text>
+              </Pressable>
+              {technicians.map((tech: any) => {
+                const isSelected = task.assignedTechnicianId === tech.id;
+                return (
+                  <Pressable
+                    key={tech.id}
+                    style={[
+                      styles.techOption,
+                      {
+                        backgroundColor: isSelected ? "#10B981" + "20" : theme.surfaceSecondary,
+                        borderColor: isSelected ? "#10B981" : "transparent",
+                      },
+                    ]}
+                    onPress={() => updateMutation.mutate({ assignedTechnicianId: tech.id })}
+                  >
+                    <View style={[styles.techAvatar, { backgroundColor: "#10B981" + "20" }]}>
+                      <Text style={[styles.techAvatarText, { color: "#10B981", fontFamily: "Inter_700Bold" }]}>
+                        {tech.fullName?.charAt(0)?.toUpperCase() || "?"}
+                      </Text>
+                    </View>
+                    <Text style={[styles.techOptionText, { color: isSelected ? "#10B981" : theme.text, fontFamily: isSelected ? "Inter_600SemiBold" : "Inter_500Medium" }]}>
+                      {tech.fullName}
+                    </Text>
+                    {isSelected && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {task.additionalDetails ? (
           <View style={[styles.infoCard, { backgroundColor: theme.surface }]}>
             <Text style={[styles.cardTitle, { color: theme.text, fontFamily: "Inter_600SemiBold" }]}>
@@ -348,4 +404,9 @@ const styles = StyleSheet.create({
   pendingActions: { flexDirection: "row", gap: 10, justifyContent: "flex-end" },
   pendingBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   pendingBtnText: { fontSize: 14 },
+  techGrid: { gap: 8 },
+  techOption: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, borderRadius: 10, gap: 10, borderWidth: 1.5 },
+  techOptionText: { fontSize: 14, flex: 1 },
+  techAvatar: { width: 30, height: 30, borderRadius: 10, justifyContent: "center", alignItems: "center" },
+  techAvatarText: { fontSize: 13 },
 });

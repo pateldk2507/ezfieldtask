@@ -57,12 +57,24 @@ export default function EmailConfigScreen() {
   });
 
   const testMutation = useMutation({
-    mutationFn: () => apiPost("/api/email-config/test", {}),
+    mutationFn: async () => {
+      if (!smtpHost || !smtpUser || !smtpPass || smtpPass === "********") {
+        throw new Error("Please fill in all SMTP fields (host, email, password) before testing.");
+      }
+      await apiPut("/api/email-config", {
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpPass: smtpPass !== "********" ? smtpPass : undefined,
+      });
+      return apiPost("/api/email-config/test", {});
+    },
     onSuccess: (data: any) => {
-      showToast(data.message || "Test completed", "success");
+      queryClient.invalidateQueries({ queryKey: ["/api/email-config"] });
+      showToast(data.message || "Test email sent!", "success");
     },
     onError: (err: any) => {
-      showToast(err.message || "Test failed", "error");
+      showToast(err.message || "SMTP test failed", "error");
     },
   });
 

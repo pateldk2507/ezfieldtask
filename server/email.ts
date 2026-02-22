@@ -12,14 +12,21 @@ function createTransporter(org: Organization) {
     return null;
   }
 
+  const port = org.smtpPort || 587;
   return nodemailer.createTransport({
     host: org.smtpHost,
-    port: org.smtpPort || 587,
-    secure: (org.smtpPort || 587) === 465,
+    port,
+    secure: port === 465,
     auth: {
       user: org.smtpUser,
       pass: org.smtpPass,
     },
+    tls: {
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 
@@ -27,21 +34,39 @@ export async function sendEmail(org: Organization, options: EmailOptions): Promi
   const transporter = createTransporter(org);
   if (!transporter) {
     console.log("Email not sent: SMTP not configured for organization", org.name);
+    console.log("SMTP config check - host:", org.smtpHost, "user:", org.smtpUser, "pass set:", !!org.smtpPass);
     return false;
   }
 
   try {
-    await transporter.sendMail({
-      from: org.smtpUser,
+    const info = await transporter.sendMail({
+      from: org.smtpUser!,
       to: options.to,
       subject: options.subject,
       html: options.html,
     });
-    console.log(`Email sent to ${options.to}: ${options.subject}`);
+    console.log(`Email sent to ${options.to}: ${options.subject} (messageId: ${info.messageId})`);
     return true;
-  } catch (error) {
-    console.error("Failed to send email:", error);
+  } catch (error: any) {
+    console.error("Failed to send email:", error?.message || error);
+    console.error("SMTP details - host:", org.smtpHost, "port:", org.smtpPort, "user:", org.smtpUser);
     return false;
+  }
+}
+
+export async function verifySmtpConnection(org: Organization): Promise<{ success: boolean; error?: string }> {
+  const transporter = createTransporter(org);
+  if (!transporter) {
+    return { success: false, error: "SMTP not configured. Please fill in host, username, and password." };
+  }
+
+  try {
+    await transporter.verify();
+    return { success: true };
+  } catch (error: any) {
+    const msg = error?.message || "Unknown error";
+    console.error("SMTP verification failed:", msg);
+    return { success: false, error: msg };
   }
 }
 

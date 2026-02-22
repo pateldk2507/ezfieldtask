@@ -10,7 +10,7 @@ import {
   type AuthRequest,
 } from "./auth";
 import { encryptVaultData, decryptVaultData } from "./vault";
-import { sendWelcomeEmail, sendTaskAssignmentEmail, generateTempPassword } from "./email";
+import { sendWelcomeEmail, sendTaskAssignmentEmail, generateTempPassword, sendEmail, verifySmtpConnection } from "./email";
 import { loginSchema, registerSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -619,12 +619,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthRequest, res: Response) => {
       try {
         const org = await storage.getOrganization(req.user!.organizationId);
-        if (!org?.smtpHost || !org?.smtpUser) {
-          return res.status(400).json({ message: "SMTP not configured. Please save email settings first." });
+        if (!org?.smtpHost || !org?.smtpUser || !org?.smtpPass) {
+          return res.status(400).json({ message: "SMTP not configured. Please save your SMTP host, username, and password first." });
         }
-        res.json({ message: "Email configuration looks valid. Test email would be sent to: " + org.smtpUser });
-      } catch (error) {
-        res.status(500).json({ message: "Failed to test email config" });
+
+        const verification = await verifySmtpConnection(org);
+        if (!verification.success) {
+          return res.status(400).json({ message: `SMTP connection failed: ${verification.error}` });
+        }
+
+        const sent = await sendEmail(org, {
+          to: org.smtpUser,
+          subject: `EZ Field Task - SMTP Test (${org.name})`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px;">
+              <h2 style="color: #0066FF;">SMTP Test Successful!</h2>
+              <p>Your email configuration for <strong>${org.name}</strong> is working correctly.</p>
+              <p style="color: #666; font-size: 14px;">This is a test email from EZ Field Task.</p>
+            </div>
+          `,
+        });
+
+        if (sent) {
+          res.json({ message: `Test email sent successfully to ${org.smtpUser}` });
+        } else {
+          res.status(400).json({ message: "SMTP connected but failed to send test email. Check your email provider settings." });
+        }
+      } catch (error: any) {
+        console.error("Test email error:", error);
+        res.status(500).json({ message: "Failed to test email: " + (error?.message || "Unknown error") });
       }
     }
   );

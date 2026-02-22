@@ -10,6 +10,7 @@ import {
   type AuthRequest,
 } from "./auth";
 import { encryptVaultData, decryptVaultData } from "./vault";
+import { sendWelcomeEmail, sendTaskAssignmentEmail, generateTempPassword } from "./email";
 import { loginSchema, registerSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -150,14 +151,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireRole("admin"),
     async (req: AuthRequest, res: Response) => {
       try {
-        const { email, password, fullName, username, role, phone } = req.body;
+        const { email, fullName, username, role, phone } = req.body;
 
         const existing = await storage.getUserByEmail(email, req.user!.organizationId);
         if (existing) {
           return res.status(400).json({ message: "Email already exists in this organization" });
         }
 
-        const hashedPassword = await hashPassword(password);
+        const tempPassword = req.body.password || generateTempPassword();
+        const hashedPassword = await hashPassword(tempPassword);
         const user = await storage.createUser({
           organizationId: req.user!.organizationId,
           email,
@@ -171,8 +173,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           notificationsEnabled: true,
         });
 
+        const org = await storage.getOrganization(req.user!.organizationId);
+        if (org) {
+          sendWelcomeEmail(org, email, fullName, tempPassword, role || "technician").catch((err) =>
+            console.error("Welcome email failed:", err)
+          );
+        }
+
         const { password: _, ...safeUser } = user;
-        res.json(safeUser);
+        res.json({ ...safeUser, tempPassword });
       } catch (error) {
         res.status(500).json({ message: "Failed to create user" });
       }
@@ -343,6 +352,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           vaultData,
         });
 
+        if (task.assignedTechnicianId) {
+          const tech = await storage.getUser(task.assignedTechnicianId);
+          const org = await storage.getOrganization(req.user!.organizationId);
+          if (tech && org) {
+            sendTaskAssignmentEmail(
+              org,
+              tech.email,
+              tech.fullName,
+              task.title,
+              task.description || "",
+              task.scheduledDate || "",
+              task.scheduledTime || "",
+              task.address || "",
+              task.contactPersonName || "",
+              task.contactPhone || "",
+              task.urgency || "medium"
+            ).catch((err) => console.error("Task assignment email failed:", err));
+          }
+        }
+
         res.json(task);
       } catch (error) {
         console.error("Create task error:", error);
@@ -382,7 +411,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delete updateData.vaultAccessCode;
       }
 
+      const previousTechId = task.assignedTechnicianId;
       const updated = await storage.updateTask(req.params.id, updateData);
+
+      if (updated && updateData.assignedTechnicianId && updateData.assignedTechnicianId !== previousTechId) {
+        const tech = await storage.getUser(updateData.assignedTechnicianId);
+        const org = await storage.getOrganization(req.user!.organizationId);
+        if (tech && org) {
+          sendTaskAssignmentEmail(
+            org,
+            tech.email,
+            tech.fullName,
+            updated.title,
+            updated.description || "",
+            updated.scheduledDate || "",
+            updated.scheduledTime || "",
+            updated.address || "",
+            updated.contactPersonName || "",
+            updated.contactPhone || "",
+            updated.urgency || "medium"
+          ).catch((err) => console.error("Task reassignment email failed:", err));
+        }
+      }
+
       res.json(updated);
     } catch (error) {
       res.status(500).json({ message: "Failed to update task" });

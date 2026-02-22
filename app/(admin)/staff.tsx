@@ -45,6 +45,8 @@ export default function StaffScreen() {
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("technician");
+  const [showTempPasswordModal, setShowTempPasswordModal] = useState(false);
+  const [tempPasswordInfo, setTempPasswordInfo] = useState<{ name: string; email: string; password: string } | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/users"],
@@ -52,12 +54,18 @@ export default function StaffScreen() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiPost("/api/users", data),
-    onSuccess: () => {
+    mutationFn: (data: any) => apiPost<any>("/api/users", data),
+    onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      const createdName = fullName;
+      const createdEmail = email;
       resetForm();
       setShowCreateModal(false);
-      showToast("Staff member created successfully", "success");
+      if (result.tempPassword) {
+        setTempPasswordInfo({ name: createdName, email: createdEmail, password: result.tempPassword });
+        setShowTempPasswordModal(true);
+      }
+      showToast("Staff member created! Welcome email sent.", "success");
     },
     onError: (err: any) => {
       showToast(err.message || "Failed to create staff member", "error");
@@ -123,10 +131,6 @@ export default function StaffScreen() {
   const handleSubmit = () => {
     if (!fullName || !email || !username) {
       showToast("Please fill in all required fields", "error");
-      return;
-    }
-    if (!editingUser && !password) {
-      showToast("Password is required for new staff members", "error");
       return;
     }
 
@@ -293,6 +297,43 @@ export default function StaffScreen() {
         />
       )}
 
+      <Modal visible={showTempPasswordModal} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.tempPwdModal, { backgroundColor: theme.background }]}>
+            <View style={[styles.tempPwdIcon, { backgroundColor: Colors.urgency.low + "15" }]}>
+              <Ionicons name="checkmark-circle" size={48} color={Colors.urgency.low} />
+            </View>
+            <Text style={[styles.tempPwdTitle, { color: theme.text, fontFamily: "Inter_700Bold" }]}>
+              Staff Member Created!
+            </Text>
+            {tempPasswordInfo && (
+              <>
+                <Text style={[styles.tempPwdSubtext, { color: theme.textSecondary, fontFamily: "Inter_400Regular" }]}>
+                  A welcome email has been sent to {tempPasswordInfo.email} with their login details.
+                </Text>
+                <View style={[styles.tempPwdCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                  <Text style={[styles.tempPwdLabel, { color: theme.textSecondary, fontFamily: "Inter_500Medium" }]}>
+                    Temporary Password
+                  </Text>
+                  <Text style={[styles.tempPwdValue, { color: theme.text, fontFamily: "Inter_700Bold" }]}>
+                    {tempPasswordInfo.password}
+                  </Text>
+                  <Text style={[styles.tempPwdNote, { color: Colors.urgency.medium, fontFamily: "Inter_500Medium" }]}>
+                    Staff member should change this after first login
+                  </Text>
+                </View>
+              </>
+            )}
+            <Pressable
+              style={[styles.tempPwdBtn, { backgroundColor: theme.tint }]}
+              onPress={() => { setShowTempPasswordModal(false); setTempPasswordInfo(null); }}
+            >
+              <Text style={[styles.tempPwdBtnText, { fontFamily: "Inter_600SemiBold" }]}>Done</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={showCreateModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
@@ -360,16 +401,21 @@ export default function StaffScreen() {
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: theme.textSecondary, fontFamily: "Inter_500Medium" }]}>
-                  Password {editingUser ? "(leave blank to keep current)" : "*"}
+                  Password {editingUser ? "(leave blank to keep current)" : "(auto-generated if empty)"}
                 </Text>
                 <TextInput
                   style={[styles.input, { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, fontFamily: "Inter_400Regular" }]}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder={editingUser ? "Leave blank to keep current" : "Min 6 characters"}
+                  placeholder={editingUser ? "Leave blank to keep current" : "Leave blank for auto-generated"}
                   placeholderTextColor={theme.tabIconDefault}
                   secureTextEntry
                 />
+                {!editingUser && (
+                  <Text style={[styles.helperText, { color: theme.textSecondary, fontFamily: "Inter_400Regular" }]}>
+                    A temporary password will be generated and emailed to the staff member
+                  </Text>
+                )}
               </View>
 
               <View style={styles.inputGroup}>
@@ -484,4 +530,15 @@ const styles = StyleSheet.create({
   roleOption: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, gap: 8 },
   roleOptionText: { fontSize: 13 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  helperText: { fontSize: 12, marginLeft: 4, marginTop: 2 },
+  tempPwdModal: { borderRadius: 20, padding: 28, marginHorizontal: 24, alignItems: "center", gap: 16 },
+  tempPwdIcon: { width: 80, height: 80, borderRadius: 40, justifyContent: "center", alignItems: "center" },
+  tempPwdTitle: { fontSize: 20, textAlign: "center" },
+  tempPwdSubtext: { fontSize: 14, textAlign: "center", lineHeight: 20 },
+  tempPwdCard: { width: "100%", borderRadius: 12, padding: 16, borderWidth: 1, alignItems: "center", gap: 8 },
+  tempPwdLabel: { fontSize: 12 },
+  tempPwdValue: { fontSize: 22, letterSpacing: 1 },
+  tempPwdNote: { fontSize: 12 },
+  tempPwdBtn: { width: "100%", paddingVertical: 14, borderRadius: 12, alignItems: "center" },
+  tempPwdBtnText: { color: "#FFF", fontSize: 16 },
 });

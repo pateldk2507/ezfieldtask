@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike } from "drizzle-orm";
 import { db } from "./db";
 import {
   organizations,
@@ -82,7 +82,7 @@ export class DatabaseStorage {
       .select()
       .from(users)
       .where(
-        and(eq(users.email, email), eq(users.organizationId, organizationId))
+        and(ilike(users.email, email), eq(users.organizationId, organizationId))
       );
     return user;
   }

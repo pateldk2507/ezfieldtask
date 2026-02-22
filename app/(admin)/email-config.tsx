@@ -58,15 +58,20 @@ export default function EmailConfigScreen() {
 
   const testMutation = useMutation({
     mutationFn: async () => {
-      if (!smtpHost || !smtpUser || !smtpPass || smtpPass === "********") {
-        throw new Error("Please fill in all SMTP fields (host, email, password) before testing.");
+      const hasExistingPassword = config?.hasPassword;
+      const hasNewPassword = smtpPass && smtpPass !== "********";
+
+      if (!smtpHost || !smtpUser) {
+        throw new Error("Please fill in SMTP Host and Email Address.");
       }
-      await apiPut("/api/email-config", {
-        smtpHost,
-        smtpPort,
-        smtpUser,
-        smtpPass: smtpPass !== "********" ? smtpPass : undefined,
-      });
+      if (!hasNewPassword && !hasExistingPassword) {
+        throw new Error("Please enter your SMTP password.");
+      }
+
+      const saveData: any = { smtpHost, smtpPort, smtpUser };
+      if (hasNewPassword) saveData.smtpPass = smtpPass;
+
+      await apiPut("/api/email-config", saveData);
       return apiPost("/api/email-config/test", {});
     },
     onSuccess: (data: any) => {
@@ -247,6 +252,7 @@ export default function EmailConfigScreen() {
             Common SMTP Settings
           </Text>
           {[
+            { provider: "Hostinger", host: "smtp.hostinger.com", port: "465" },
             { provider: "Gmail", host: "smtp.gmail.com", port: "587" },
             { provider: "Outlook", host: "smtp.office365.com", port: "587" },
             { provider: "Yahoo", host: "smtp.mail.yahoo.com", port: "465" },

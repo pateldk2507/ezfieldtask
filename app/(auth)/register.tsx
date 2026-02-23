@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth-context";
+import { useResponsive } from "@/hooks/useResponsive";
 import Colors from "@/constants/colors";
 
 export default function RegisterScreen() {
@@ -23,6 +24,7 @@ export default function RegisterScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
+  const { isDesktop, isWeb } = useResponsive();
 
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -96,12 +98,13 @@ export default function RegisterScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20),
+            paddingTop: insets.top + (isWeb ? 67 : 20),
+            paddingBottom: insets.bottom + (isWeb ? 34 : 20),
           },
         ]}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={[isDesktop && styles.desktopCard, isDesktop && { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color={theme.text} />
@@ -164,6 +167,7 @@ export default function RegisterScreen() {
             )}
           </Pressable>
         </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -174,6 +178,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  desktopCard: {
+    maxWidth: 480,
+    width: "100%",
+    padding: 40,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    marginTop: 20,
   },
   header: {
     marginBottom: 16,

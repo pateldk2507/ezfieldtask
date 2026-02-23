@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth-context";
+import { useResponsive } from "@/hooks/useResponsive";
 import Colors from "@/constants/colors";
 
 export default function LoginScreen() {
@@ -23,6 +24,7 @@ export default function LoginScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
+  const { isDesktop, isWeb } = useResponsive();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,12 +59,13 @@ export default function LoginScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 40),
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20),
+            paddingTop: insets.top + (isWeb ? 67 : 40),
+            paddingBottom: insets.bottom + (isWeb ? 34 : 20),
           },
         ]}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={[isDesktop && styles.desktopCard, isDesktop && { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={styles.logoContainer}>
           <View style={[styles.logoCircle, { backgroundColor: theme.tint }]}>
             <Ionicons name="construct" size={36} color="#FFF" />
@@ -174,6 +177,7 @@ export default function LoginScreen() {
             </Pressable>
           </View>
         </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -185,6 +189,18 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     justifyContent: "center",
+    alignItems: "center",
+  },
+  desktopCard: {
+    maxWidth: 440,
+    width: "100%",
+    padding: 40,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
   logoContainer: {
     alignItems: "center",

@@ -505,7 +505,7 @@ async function buildWebExport(domain) {
 
   const env = {
     ...process.env,
-    EXPO_PUBLIC_DOMAIN: `https://${domain}:5000`,
+    EXPO_PUBLIC_DOMAIN: domain,
   };
 
   return new Promise((resolve, reject) => {

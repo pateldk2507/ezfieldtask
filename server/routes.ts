@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { email, password, orgSlug } = parsed.data;
 
-      const org = await storage.getOrganizationBySlug(orgSlug);
+      const org = await storage.getOrganizationBySlug(orgSlug.toLowerCase().trim());
       if (!org) {
         return res.status(401).json({ message: "Organization not found" });
       }

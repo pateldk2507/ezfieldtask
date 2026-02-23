@@ -47,8 +47,14 @@ export class DatabaseStorage {
     const [org] = await db
       .select()
       .from(organizations)
-      .where(eq(organizations.slug, slug));
-    return org;
+      .where(ilike(organizations.slug, slug));
+    if (org) return org;
+
+    const [orgByName] = await db
+      .select()
+      .from(organizations)
+      .where(ilike(organizations.name, slug));
+    return orgByName;
   }
 
   async updateOrganization(

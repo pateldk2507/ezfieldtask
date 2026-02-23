@@ -19,6 +19,7 @@ import { apiGet, apiPut } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const URGENCY_CONFIG: Record<string, { color: string; label: string }> = {
   low: { color: Colors.urgency.low, label: "Low" },
@@ -35,6 +36,7 @@ export default function TaskDetailScreen() {
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
+  const { showSidebar, isWeb } = useResponsive();
 
   const { toast, showToast, hideToast } = useToast();
   const [showPendingModal, setShowPendingModal] = useState(false);
@@ -147,7 +149,7 @@ export default function TaskDetailScreen() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 8),
+            paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 8),
             backgroundColor: theme.surface,
             borderBottomColor: theme.border,
           },
@@ -165,7 +167,7 @@ export default function TaskDetailScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 20 },
+          { paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + 20 },
         ]}
         contentInsetAdjustmentBehavior="automatic"
       >

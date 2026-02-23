@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   useColorScheme,
-  Platform,
   TextInput,
   ActivityIndicator,
 } from "react-native";
@@ -16,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPut, apiPost } from "@/lib/api";
 import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export default function EmailConfigScreen() {
   const insets = useSafeAreaInsets();
@@ -24,6 +24,7 @@ export default function EmailConfigScreen() {
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
   const { toast, showToast, hideToast } = useToast();
+  const { showSidebar, isWeb } = useResponsive();
 
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("587");
@@ -109,8 +110,8 @@ export default function EmailConfigScreen() {
       <Toast {...toast} onDismiss={hideToast} />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 80,
+          paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
+          paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + (showSidebar ? 0 : 80),
           padding: 16,
         }}
         keyboardShouldPersistTaps="handled"

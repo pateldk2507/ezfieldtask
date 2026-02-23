@@ -19,6 +19,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const TEMPLATE_VARIABLES = [
   { variable: "{{task_title}}", description: "Title of the task" },
@@ -44,6 +45,7 @@ export default function EmailTemplatesScreen() {
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
   const { toast, showToast, hideToast } = useToast();
+  const { showSidebar, isWeb } = useResponsive();
 
   const [showModal, setShowModal] = useState(false);
   const [showVarsRef, setShowVarsRef] = useState(false);
@@ -211,7 +213,7 @@ export default function EmailTemplatesScreen() {
       <View
         style={[
           styles.header,
-          { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12) },
+          { paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12) },
         ]}
       >
         <Text style={[styles.headerTitle, { color: theme.text, fontFamily: "Inter_700Bold" }]}>
@@ -247,7 +249,7 @@ export default function EmailTemplatesScreen() {
           contentContainerStyle={{
             padding: 16,
             gap: 10,
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 80,
+            paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + (showSidebar ? 0 : 80),
           }}
           ListEmptyComponent={
             <View style={styles.emptyState}>

@@ -6,7 +6,6 @@ import {
   StyleSheet,
   FlatList,
   useColorScheme,
-  Platform,
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,11 +16,13 @@ import { apiGet } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import TaskCard from "@/components/TaskCard";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export default function AdminTasksScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { showSidebar, isWeb } = useResponsive();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
   const [filter, setFilter] = useState("all");
@@ -66,7 +67,7 @@ export default function AdminTasksScreen() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
+            paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
           },
         ]}
       >
@@ -125,7 +126,7 @@ export default function AdminTasksScreen() {
           contentContainerStyle={{
             padding: 16,
             gap: 10,
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 80,
+            paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + (showSidebar ? 0 : 80),
           }}
           ListEmptyComponent={
             <View style={styles.emptyState}>

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   useColorScheme,
-  Platform,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
@@ -15,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { apiGet } from "@/lib/api";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
@@ -22,6 +22,7 @@ export default function SalesDashboard() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
+  const { showSidebar, isWeb } = useResponsive();
 
   const { data: stats, isLoading, refetch } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -35,8 +36,8 @@ export default function SalesDashboard() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={{
-        paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
-        paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 80,
+        paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
+        paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + (showSidebar ? 0 : 80),
       }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor={theme.tint} />}
       contentInsetAdjustmentBehavior="automatic"

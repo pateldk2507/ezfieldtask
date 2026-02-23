@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   useColorScheme,
-  Platform,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
@@ -15,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 function getWeekDates(baseDate: Date): Date[] {
   const dates: Date[] = [];
@@ -36,6 +36,7 @@ export default function TechnicianSchedule() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
+  const { showSidebar, isWeb } = useResponsive();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const weekDates = getWeekDates(selectedDate);
@@ -83,7 +84,7 @@ export default function TechnicianSchedule() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
+            paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
             backgroundColor: theme.surface,
             borderBottomColor: theme.border,
           },

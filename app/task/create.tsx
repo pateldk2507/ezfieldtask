@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   useColorScheme,
-  Platform,
   TextInput,
   ActivityIndicator,
   Alert,
@@ -19,6 +18,7 @@ import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const URGENCY_LEVELS = [
   { key: "low", label: "Low", color: Colors.urgency.low },
@@ -34,6 +34,7 @@ export default function CreateTaskScreen() {
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
+  const { showSidebar, isWeb } = useResponsive();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -139,7 +140,7 @@ export default function CreateTaskScreen() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 8),
+            paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 8),
             backgroundColor: theme.surface,
             borderBottomColor: theme.border,
           },
@@ -167,7 +168,7 @@ export default function CreateTaskScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 20 },
+          { paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + 20 },
         ]}
         keyboardShouldPersistTaps="handled"
       >

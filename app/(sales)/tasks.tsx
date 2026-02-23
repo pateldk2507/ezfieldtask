@@ -7,7 +7,6 @@ import {
   StyleSheet,
   RefreshControl,
   useColorScheme,
-  Platform,
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,12 +16,14 @@ import { router } from "expo-router";
 import { apiGet } from "@/lib/api";
 import TaskCard from "@/components/TaskCard";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export default function SalesMyTasks() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
+  const { showSidebar, isWeb } = useResponsive();
 
   const { data: tasks = [], isLoading, refetch } = useQuery({
     queryKey: ["/api/tasks"],
@@ -46,7 +47,7 @@ export default function SalesMyTasks() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
+            paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
             backgroundColor: theme.surface,
             borderBottomColor: theme.border,
           },

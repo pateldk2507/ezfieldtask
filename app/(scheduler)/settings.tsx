@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import Colors from "@/constants/colors";
 import { Toast, useToast } from "@/components/Toast";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export default function SchedulerSettings() {
   const { user, organization, logout } = useAuth();
@@ -29,6 +30,7 @@ export default function SchedulerSettings() {
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
   const { toast, showToast, hideToast } = useToast();
+  const { showSidebar, isWeb } = useResponsive();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.notificationsEnabled ?? true
@@ -81,8 +83,8 @@ export default function SchedulerSettings() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={{
-        paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
-        paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 80,
+        paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
+        paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + (showSidebar ? 0 : 80),
       }}
       contentInsetAdjustmentBehavior="automatic"
     >

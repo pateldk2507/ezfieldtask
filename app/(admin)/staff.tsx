@@ -20,6 +20,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Toast, useToast } from "@/components/Toast";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 const ROLES = [
   { key: "admin", label: "Admin", icon: "shield-outline" },
@@ -36,6 +37,7 @@ export default function StaffScreen() {
   const theme = isDark ? Colors.dark : Colors.light;
   const queryClient = useQueryClient();
   const { toast, showToast, hideToast } = useToast();
+  const { showSidebar, isWeb } = useResponsive();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -233,7 +235,7 @@ export default function StaffScreen() {
       <View
         style={[
           styles.header,
-          { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12) },
+          { paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12) },
         ]}
       >
         <Text style={[styles.headerTitle, { color: theme.text, fontFamily: "Inter_700Bold" }]}>
@@ -284,7 +286,7 @@ export default function StaffScreen() {
           contentContainerStyle={{
             padding: 16,
             gap: 10,
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 20) + 80,
+            paddingBottom: insets.bottom + (isWeb ? (showSidebar ? 24 : 34) : 20) + (showSidebar ? 0 : 80),
           }}
           ListEmptyComponent={
             <View style={styles.emptyState}>

@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   useColorScheme,
-  Platform,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
@@ -16,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
 import TaskCard from "@/components/TaskCard";
 import Colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 
 function getWeekDates(baseDate: Date): Date[] {
   const dates: Date[] = [];
@@ -37,6 +37,7 @@ export default function TechnicianCalendar() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? Colors.dark : Colors.light;
+  const { showSidebar, isWeb } = useResponsive();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const weekDates = getWeekDates(selectedDate);
@@ -74,7 +75,7 @@ export default function TechnicianCalendar() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 12),
+            paddingTop: insets.top + (isWeb ? (showSidebar ? 24 : 67) : 12),
             backgroundColor: theme.surface,
             borderBottomColor: theme.border,
           },

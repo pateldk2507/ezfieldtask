@@ -28,6 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **State management**: TanStack React Query for server state; React Context (`AuthProvider`) for auth state
 - **API communication**: Custom `authFetch` wrapper in `lib/api.ts` that attaches JWT tokens from AsyncStorage to all requests
 - **Styling**: React Native StyleSheet with a custom color system (`constants/colors.ts`) supporting light/dark themes
+- **Responsive Design**: Custom `useResponsive` hook (`hooks/useResponsive.ts`) with breakpoints (mobile: 0, tablet: 768, desktop: 1024). On desktop web (≥768px), navigation switches from bottom tabs to a sidebar (`components/ResponsiveTabBar.tsx`). Login/register screens show centered card layout on desktop. All content screens adjust padding based on sidebar visibility.
 - **Fonts**: Inter font family loaded via `@expo-google-fonts/inter`
 - **Native features**: Supports native tab bars via `expo-router/unstable-native-tabs` with iOS SF Symbols, falls back to Ionicons-based classic tabs on other platforms
 

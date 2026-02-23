@@ -496,6 +496,53 @@ function updateManifests(manifests, timestamp, baseUrl, assetsByHash) {
   console.log("Manifests updated");
 }
 
+async function buildWebExport(domain) {
+  console.log("Building Expo web export...");
+
+  if (fs.existsSync("dist")) {
+    fs.rmSync("dist", { recursive: true });
+  }
+
+  const env = {
+    ...process.env,
+    EXPO_PUBLIC_DOMAIN: `https://${domain}:5000`,
+  };
+
+  return new Promise((resolve, reject) => {
+    const webBuild = spawn("npx", ["expo", "export", "--platform", "web", "--output-dir", "dist"], {
+      stdio: ["ignore", "pipe", "pipe"],
+      env,
+    });
+
+    let stderr = "";
+    if (webBuild.stdout) {
+      webBuild.stdout.on("data", (data) => {
+        const output = data.toString().trim();
+        if (output) console.log(`[Web Build] ${output}`);
+      });
+    }
+    if (webBuild.stderr) {
+      webBuild.stderr.on("data", (data) => {
+        const output = data.toString().trim();
+        if (output) {
+          console.error(`[Web Build] ${output}`);
+          stderr += output + "\n";
+        }
+      });
+    }
+
+    webBuild.on("close", (code) => {
+      if (code === 0) {
+        console.log("Web export complete");
+        resolve();
+      } else {
+        console.error(`Web export failed with code ${code}`);
+        reject(new Error(`Web export failed: ${stderr}`));
+      }
+    });
+  });
+}
+
 async function main() {
   console.log("Building static Expo Go deployment...");
 
@@ -507,6 +554,12 @@ async function main() {
 
   prepareDirectories(timestamp);
   clearMetroCache();
+
+  try {
+    await buildWebExport(domain);
+  } catch (error) {
+    console.error("Web export failed, continuing with mobile-only build:", error.message);
+  }
 
   await startMetro(domain);
 
